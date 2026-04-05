@@ -155,7 +155,6 @@ services:
       start_period: 10s
 
   relay-server:
-    profiles: ["relay"]
     build:
       context: ../..
       dockerfile: crates/relay-tunnel/Dockerfile
