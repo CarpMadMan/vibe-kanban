@@ -99,13 +99,13 @@ services:
       SERVER_PUBLIC_BASE_URL: ${PUBLIC_BASE_URL:-http://localhost:3000}
       VIBEKANBAN_REMOTE_JWT_SECRET: ${VIBEKANBAN_REMOTE_JWT_SECRET:?set in .env.remote}
 
-      # Auth 
+      # Auth
       # Configure at least one OAuth provider, or set self-host local auth credentials.
       GITHUB_OAUTH_CLIENT_ID: ${GITHUB_OAUTH_CLIENT_ID:-}
       GITHUB_OAUTH_CLIENT_SECRET: ${GITHUB_OAUTH_CLIENT_SECRET:-}
       GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
       GOOGLE_OAUTH_CLIENT_SECRET: ${GOOGLE_OAUTH_CLIENT_SECRET:-}
-      # Self-hosted local auth 
+      # Self-hosted local auth
       SELF_HOST_LOCAL_AUTH_EMAIL: ${SELF_HOST_LOCAL_AUTH_EMAIL:-}
       SELF_HOST_LOCAL_AUTH_PASSWORD: ${SELF_HOST_LOCAL_AUTH_PASSWORD:-}
 
@@ -168,6 +168,17 @@ services:
       VIBEKANBAN_REMOTE_JWT_SECRET: ${VIBEKANBAN_REMOTE_JWT_SECRET:?set in .env.remote}
     ports:
       - "127.0.0.1:8082:8082"
+    labels:
+      # Route /v1/relay/* on the main domain to the relay server.
+      # Desktop VK clients use VK_SHARED_API_BASE (the remote-server URL) as the
+      # relay base when VITE_RELAY_API_BASE_URL is not baked in at build time.
+      - "traefik.http.routers.relay-path-https.entryPoints=https"
+      - "traefik.http.routers.relay-path-https.rule=Host(`vibe.justbadge.com`) && PathPrefix(`/v1/relay`)"
+      - "traefik.http.routers.relay-path-https.tls=true"
+      - "traefik.http.routers.relay-path-https.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.relay-path-http.entryPoints=http"
+      - "traefik.http.routers.relay-path-http.rule=Host(`vibe.justbadge.com`) && PathPrefix(`/v1/relay`)"
+      - "traefik.http.routers.relay-path-http.middlewares=redirect-to-https"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:8082/health"]
