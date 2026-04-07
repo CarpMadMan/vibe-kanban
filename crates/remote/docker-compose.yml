@@ -20,6 +20,7 @@ services:
       - "5433:5432"
 
   azurite:
+    profiles: ["attachments"]
     image: mcr.microsoft.com/azure-storage/azurite:latest
     command: "azurite-blob --blobHost 0.0.0.0 --blobPort 10000 --loose --skipApiVersionCheck"
     ports:
@@ -32,6 +33,7 @@ services:
       retries: 30
 
   azurite-init:
+    profiles: ["attachments"]
     image: mcr.microsoft.com/azure-cli:latest
     depends_on:
       azurite:
@@ -85,6 +87,7 @@ services:
         condition: service_healthy
       azurite-init:
         condition: service_completed_successfully
+        required: false
     environment:
       RUST_LOG: info,remote=info
 
@@ -133,12 +136,13 @@ services:
       STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
       STRIPE_FREE_SEAT_LIMIT: ${STRIPE_FREE_SEAT_LIMIT:-1}
 
-      # Attachments — Azurite local blob storage
-      AZURE_STORAGE_ACCOUNT_NAME: devstoreaccount1
-      AZURE_STORAGE_ACCOUNT_KEY: "Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw=="
-      AZURE_STORAGE_CONTAINER_NAME: issue-attachments
-      AZURE_STORAGE_ENDPOINT_URL: "http://azurite:10000/devstoreaccount1"
-      AZURE_STORAGE_PUBLIC_ENDPOINT_URL: "${PUBLIC_BASE_URL:-http://localhost:3000}"
+      # Attachments (optional)
+      # Only set these when enabling the attachments profile or using external blob storage.
+      AZURE_STORAGE_ACCOUNT_NAME:
+      AZURE_STORAGE_ACCOUNT_KEY:
+      AZURE_STORAGE_CONTAINER_NAME:
+      AZURE_STORAGE_ENDPOINT_URL:
+      AZURE_STORAGE_PUBLIC_ENDPOINT_URL:
 
     ports:
       - "${REMOTE_SERVER_PORTS:-127.0.0.1:3000:8081}"
